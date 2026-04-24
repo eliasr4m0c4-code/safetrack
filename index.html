@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>USDA SafeTrack</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F5F2EB;--bg2:#EDE9DF;--bg3:#E2DDD1;
+  --ink:#1A1A18;--ink2:#4A4A42;--ink3:#8A8A7E;
+  --green:#2D6A4F;--green-lt:#52B788;--green-bg:#D8F3DC;
+  --amber:#B5571A;--amber-bg:#FDE8D5;
+  --red:#C1121F;--red-bg:#FFE5E7;
+  --blue:#1B4F72;--blue-bg:#D6EAF8;
+  --border:rgba(26,26,24,0.12);--shadow:0 2px 12px rgba(26,26,24,0.08);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--ink);height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden;}
+.app{flex:1;display:flex;flex-direction:column;max-width:480px;margin:0 auto;width:100%;height:100%;overflow:hidden;}
+.screen{display:none;flex-direction:column;flex:1;overflow:hidden;animation:fadeUp .28s ease both;}
+.screen.active{display:flex;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+.hidden{display:none!important;}
+.scroll-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:18px 16px 28px;}
+
+/* TOPBAR */
+.topbar{background:var(--ink);color:#F5F2EB;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.topbar-logo{font-family:'Space Mono',monospace;font-size:12px;letter-spacing:1px;}
+.topbar-logo span{color:var(--green-lt);}
+.topbar-right{font-size:11px;opacity:.55;font-family:'Space Mono',monospace;}
+
+/* NAV */
+.bottom-nav{display:flex;background:var(--ink);flex-shrink:0;padding-bottom:env(safe-area-inset-bottom,0px);}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:9px 4px;background:none;border:none;color:rgba(245,242,235,.4);font-family:'Outfit',sans-serif;font-size:9px;font-weight:500;gap:2px;cursor:pointer;transition:color .2s;}
+.nav-btn .ni{font-size:17px;}
+.nav-btn.active{color:var(--green-lt);}
+
+/* FIELDS */
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:13px;}
+.field label{font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.8px;}
+.field input,.field select{background:white;border:1.5px solid var(--border);border-radius:10px;padding:12px 13px;font-family:'Outfit',sans-serif;font-size:15px;color:var(--ink);outline:none;transition:border-color .2s;appearance:none;-webkit-appearance:none;}
+.field input:focus,.field select:focus{border-color:var(--green);}
+.field input::placeholder{color:var(--ink3);}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;background:white;border:1.5px solid var(--border);border-radius:10px;padding:12px 13px;margin-bottom:13px;}
+.toggle-row span{font-size:14px;font-weight:500;}
+.toggle{width:42px;height:23px;background:var(--bg3);border-radius:12px;position:relative;cursor:pointer;border:none;transition:background .2s;flex-shrink:0;}
+.toggle.on{background:var(--green);}
+.toggle::after{content:'';position:absolute;width:17px;height:17px;background:white;border-radius:50%;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+.toggle.on::after{transform:translateX(19px);}
+.btn-primary{background:var(--green);color:white;border:none;border-radius:11px;padding:15px;font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;cursor:pointer;width:100%;transition:all .2s;margin-top:4px;}
+.btn-primary:active{transform:scale(.97);}
+.link-btn{background:none;border:none;color:var(--ink3);font-family:'Outfit',sans-serif;font-size:12px;cursor:pointer;padding:6px;text-decoration:underline;}
+
+/* STEP INDICATOR */
+.step-indicator{display:flex;align-items:center;gap:8px;margin-bottom:20px;}
+.si-dot{width:8px;height:8px;border-radius:50%;background:var(--bg3);transition:background .2s;}
+.si-dot.active{background:var(--green);}
+.si-label{font-size:11px;color:var(--ink3);font-family:'Space Mono',monospace;}
+
+/* PROFILE CARD */
+.profile-card{background:white;border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow);}
+.pc-ava{width:40px;height:40px;border-radius:50%;background:var(--green-bg);display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:var(--green);flex-shrink:0;}
+.pc-info{flex:1;}
+.pc-name{font-size:14px;font-weight:700;}
+.pc-meta{font-size:11px;color:var(--ink3);margin-top:2px;}
+
+/* DAY HEADER */
+.day-header{background:var(--ink);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.dh-name{font-size:14px;font-weight:600;color:#F5F2EB;}
+.dh-meta{font-size:10px;color:rgba(245,242,235,.45);margin-top:2px;font-family:'Space Mono',monospace;}
+.tag{font-size:9px;font-family:'Space Mono',monospace;padding:3px 8px;border-radius:5px;border:1px solid;white-space:nowrap;}
+.tag-foraneo{background:rgba(181,87,26,.25);color:#F4A261;border-color:rgba(181,87,26,.3);}
+.tag-viaje-ida{background:rgba(91,45,139,.25);color:#B48FE0;border-color:rgba(91,45,139,.3);}
+.tag-viaje-vuelta{background:rgba(27,79,114,.25);color:#7FB3D3;border-color:rgba(27,79,114,.3);}
+.tag-sinact{background:rgba(138,138,126,.2);color:var(--ink3);border-color:rgba(138,138,126,.3);}
+.tag-permiso{background:rgba(181,87,26,.15);color:var(--amber);border-color:rgba(181,87,26,.25);}
+
+/* STATUS CARD */
+.status-card{background:white;border-radius:14px;border:1.5px solid var(--border);padding:16px;margin-bottom:14px;box-shadow:var(--shadow);}
+.sc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.sc-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--ink3);}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--green-lt);animation:lp 2s infinite;}
+@keyframes lp{0%,100%{box-shadow:0 0 0 3px rgba(82,183,136,.2);}50%{box-shadow:0 0 0 6px rgba(82,183,136,.07);}}
+.sc-step{font-size:19px;font-weight:700;margin-bottom:3px;}
+.sc-sub{font-size:12px;color:var(--ink3);}
+.timer-row{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);}
+.t-lbl{font-size:11px;color:var(--ink3);}
+.t-val{font-family:'Space Mono',monospace;font-size:21px;font-weight:700;color:var(--ink);transition:color .4s;}
+.t-val.warn{color:var(--amber);}
+.t-val.urg{color:var(--red);animation:blink .8s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.4;}}
+.next-info{background:var(--bg2);border-radius:8px;padding:9px 12px;margin-top:10px;display:flex;align-items:center;justify-content:space-between;}
+.ni-lbl{font-size:11px;color:var(--ink3);}
+.ni-val{font-family:'Space Mono',monospace;font-size:14px;font-weight:700;}
+
+/* BANNERS */
+.alarm-banner{background:var(--red);border-radius:12px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;animation:shake .4s ease;}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-4px);}75%{transform:translateX(4px);}}
+.ab-icon{font-size:24px;flex-shrink:0;}
+.ab-text{font-size:13px;font-weight:700;color:white;}
+.ab-sub{font-size:11px;color:rgba(255,255,255,.7);margin-top:2px;}
+.info-banner{border-radius:11px;padding:11px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;font-size:12px;line-height:1.5;}
+.ib-green{background:var(--green-bg);color:var(--green);border:1.5px solid rgba(45,106,79,.2);}
+.ib-blue{background:var(--blue-bg);color:var(--blue);border:1.5px solid rgba(27,79,114,.2);}
+.ib-amber{background:var(--amber-bg);color:var(--amber);border:1.5px solid rgba(181,87,26,.2);}
+
+/* ACTION BTNS */
+.btn-action{width:100%;border:none;border-radius:14px;padding:18px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:all .2s;margin-bottom:10px;}
+.btn-action:active{transform:scale(.97);}
+.ba-green{background:var(--green);color:#F5F2EB;box-shadow:0 4px 18px rgba(45,106,79,.28);}
+.ba-urgent{background:var(--red);color:#F5F2EB;box-shadow:0 4px 18px rgba(193,18,31,.3);}
+.ba-secondary{background:var(--bg2);color:var(--ink);border:1.5px solid var(--border);}
+.ba-done{background:var(--green-bg);color:var(--green);border:1.5px solid rgba(45,106,79,.2);}
+.ba-disabled{opacity:.32;pointer-events:none;}
+.a-icon{width:44px;height:44px;background:rgba(255,255,255,.15);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.ba-secondary .a-icon,.ba-done .a-icon{background:rgba(0,0,0,.06);}
+.a-text{text-align:left;flex:1;}
+.a-main{font-size:17px;font-weight:700;display:block;}
+.a-sub{font-size:11px;opacity:.65;display:block;margin-top:1px;}
+.a-arr{font-size:18px;opacity:.5;}
+
+/* STEP TRACK */
+.section-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--ink3);margin-bottom:8px;}
+.step-track{background:white;border-radius:14px;border:1.5px solid var(--border);overflow:hidden;box-shadow:var(--shadow);margin-bottom:14px;}
+.step-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid var(--bg2);}
+.step-item:last-child{border-bottom:none;}
+.step-item.done{background:rgba(82,183,136,.05);}
+.step-item.current{background:rgba(45,106,79,.06);}
+.step-item.pending{opacity:.38;}
+.s-icon{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.s-icon.dk{background:var(--green-bg);}
+.s-icon.cu{background:var(--ink);}
+.s-icon.pe{background:var(--bg2);}
+.s-text{flex:1;}
+.s-name{font-size:13px;font-weight:600;}
+.s-time{font-size:10px;color:var(--ink3);font-family:'Space Mono',monospace;margin-top:1px;}
+.s-badge{font-size:9px;font-weight:600;padding:3px 7px;border-radius:5px;}
+.b-done{background:var(--green-bg);color:var(--green);}
+.b-curr{background:var(--ink);color:white;}
+.b-pend{background:var(--bg3);color:var(--ink3);}
+.b-late{background:var(--amber-bg);color:var(--amber);}
+
+/* DAYOFF / PERMIT */
+.dayoff-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:28px 20px;text-align:center;gap:14px;}
+.do-icon{font-size:52px;}
+.do-title{font-size:21px;font-weight:800;}
+.do-sub{font-size:13px;color:var(--ink3);line-height:1.6;max-width:270px;}
+
+/* DAYOFF CHOICE */
+.choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.choice-card{background:white;border:1.5px solid var(--border);border-radius:12px;padding:16px 10px;text-align:center;cursor:pointer;transition:all .2s;}
+.choice-card:active{transform:scale(.97);}
+.choice-card.sel-local{border-color:var(--green);background:var(--green-bg);}
+.choice-card.sel-foraneo{border-color:var(--blue);background:var(--blue-bg);}
+.cc-icon{font-size:28px;margin-bottom:7px;}
+.cc-title{font-size:13px;font-weight:700;}
+.cc-sub{font-size:10px;color:var(--ink3);margin-top:3px;line-height:1.4;}
+
+/* STATS */
+.stat-cards{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px;}
+.stat-card{background:white;border:1.5px solid var(--border);border-radius:12px;padding:13px;box-shadow:var(--shadow);}
+.sv{font-family:'Space Mono',monospace;font-size:26px;font-weight:700;}
+.sl{font-size:10px;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
+.sv-g{color:var(--green);}
+.sv-a{color:var(--amber);}
+.sv-r{color:var(--red);}
+.week-table{background:white;border-radius:12px;border:1.5px solid var(--border);overflow:hidden;margin-bottom:14px;box-shadow:var(--shadow);}
+.wt-head{display:grid;background:var(--ink);padding:7px 10px;}
+.wt-row{display:grid;padding:9px 10px;border-bottom:1px solid var(--bg2);}
+.wt-row:last-child{border-bottom:none;}
+.wt-cell{font-size:10px;font-family:'Space Mono',monospace;color:rgba(245,242,235,.55);text-align:center;}
+.wt-cell:first-child{text-align:left;color:rgba(245,242,235,.7);}
+.wt-name{font-size:12px;font-weight:600;align-self:center;}
+.wt-data{display:flex;align-items:center;justify-content:center;}
+.day-dot{width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;}
+.dd-ok{background:var(--green-bg);color:var(--green);}
+.dd-late{background:var(--amber-bg);color:var(--amber);}
+.dd-miss{background:var(--red-bg);color:var(--red);}
+.dd-perm{background:#EDE0FF;color:#5B2D8B;}
+
+/* SUP PANEL */
+.rollcall{background:var(--ink);border-radius:12px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;}
+.rc-icon{font-size:24px;flex-shrink:0;}
+.rc-title{font-size:13px;font-weight:700;color:#F5F2EB;}
+.rc-sub{font-size:11px;color:rgba(245,242,235,.5);margin-top:1px;}
+.rc-count{margin-left:auto;font-family:'Space Mono',monospace;font-size:20px;font-weight:700;flex-shrink:0;}
+.rc-g{color:var(--green-lt);}
+.rc-r{color:#FF6B6B;}
+.ctr-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;}
+.ctr{background:white;border:1.5px solid var(--border);border-radius:10px;padding:10px 6px;text-align:center;box-shadow:var(--shadow);}
+.ctr-v{font-family:'Space Mono',monospace;font-size:20px;font-weight:700;display:block;}
+.ctr-l{font-size:9px;color:var(--ink3);text-transform:uppercase;letter-spacing:.4px;margin-top:1px;}
+.cv-g{color:var(--green);}
+.cv-a{color:var(--amber);}
+.cv-r{color:var(--red);}
+.cv-b{color:var(--blue);}
+.cv-p{color:#5B2D8B;}
+.emp-list{display:flex;flex-direction:column;gap:9px;}
+.emp-card{background:white;border:1.5px solid var(--border);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow);}
+.obs-area{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
+.obs-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--ink3);margin-bottom:5px;}
+.obs-input{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-family:'Outfit',sans-serif;font-size:13px;color:var(--ink);outline:none;resize:none;transition:border-color .2s;line-height:1.4;}
+.obs-input:focus{border-color:var(--green);}
+.obs-input::placeholder{color:var(--ink3);}
+.obs-saved{font-size:10px;color:var(--green-lt);margin-top:4px;min-height:14px;}
+.ec-top{display:flex;align-items:center;gap:11px;margin-bottom:8px;}
+.ec-ava{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:12px;font-weight:700;flex-shrink:0;}
+.ec-info{flex:1;}
+.ec-name{font-size:13px;font-weight:600;}
+.ec-meta{font-size:10px;color:var(--ink3);margin-top:1px;}
+.ec-status{font-size:10px;font-weight:600;padding:3px 9px;border-radius:7px;}
+.es-ok{background:var(--green-bg);color:var(--green);}
+.es-late{background:var(--amber-bg);color:var(--amber);}
+.es-miss{background:var(--red-bg);color:var(--red);}
+.es-permiso{background:#EDE0FF;color:#5B2D8B;}
+.ec-pills{display:flex;gap:3px;flex-wrap:wrap;}
+.pill{font-size:11px;padding:2px 7px;border-radius:5px;}
+.p-done{background:var(--green-bg);color:var(--green);}
+.p-pend{background:var(--bg2);color:var(--ink3);}
+.btn-export{width:100%;border:none;border-radius:11px;padding:14px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;transition:all .2s;margin-bottom:9px;}
+.btn-export:active{transform:scale(.97);}
+.be-green{background:var(--green);color:white;}
+.be-dark{background:var(--ink);color:#F5F2EB;}
+.be-blue{background:var(--blue);color:white;}
+.sup-edit-item{background:white;border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.sup-edit-item input{flex:1;background:none;border:none;font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;color:var(--ink);outline:none;}
+.sup-edit-num{font-family:'Space Mono',monospace;font-size:11px;color:var(--ink3);flex-shrink:0;}
+
+/* PIN */
+.pin-overlay{position:fixed;inset:0;background:rgba(26,26,24,.72);backdrop-filter:blur(6px);z-index:200;display:flex;align-items:flex-end;justify-content:center;}
+.pin-sheet{background:var(--bg);border-radius:22px 22px 0 0;width:100%;max-width:480px;padding:24px 20px 36px;animation:su .3s cubic-bezier(.34,1.56,.64,1);}
+@keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.pin-handle{width:32px;height:4px;background:var(--bg3);border-radius:2px;margin:0 auto 18px;}
+.pin-title{font-size:19px;font-weight:800;text-align:center;margin-bottom:4px;}
+.pin-sub{font-size:12px;color:var(--ink3);text-align:center;margin-bottom:18px;}
+.pin-dots{display:flex;justify-content:center;gap:11px;margin-bottom:20px;}
+.pin-dot{width:13px;height:13px;border-radius:50%;background:var(--bg3);transition:background .15s;}
+.pin-dot.filled{background:var(--green);}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.pin-key{background:white;border:1.5px solid var(--border);border-radius:11px;padding:14px;font-family:'Space Mono',monospace;font-size:19px;font-weight:700;text-align:center;cursor:pointer;color:var(--ink);transition:all .15s;}
+.pin-key:active{background:var(--green);color:white;transform:scale(.94);}
+.pin-key.del{font-size:14px;color:var(--ink3);}
+.pin-err{color:var(--red);font-size:12px;text-align:center;margin-top:10px;min-height:18px;}
+.pin-cancel-btn{background:none;border:none;color:var(--ink3);font-family:'Outfit',sans-serif;font-size:13px;cursor:pointer;width:100%;margin-top:12px;padding:6px;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(26,26,24,.58);backdrop-filter:blur(4px);z-index:100;display:flex;align-items:flex-end;justify-content:center;}
+.modal-overlay.hidden{display:none;}
+.modal-sheet{background:var(--bg);border-radius:22px 22px 0 0;width:100%;max-width:480px;padding:24px 20px 36px;animation:su .3s cubic-bezier(.34,1.56,.64,1);}
+.m-handle{width:32px;height:4px;background:var(--bg3);border-radius:2px;margin:0 auto 20px;}
+.m-icon{font-size:44px;text-align:center;margin-bottom:10px;}
+.m-title{font-size:20px;font-weight:800;text-align:center;margin-bottom:5px;}
+.m-sub{font-size:13px;color:var(--ink3);text-align:center;margin-bottom:20px;line-height:1.5;}
+.m-timebox{background:white;border:1.5px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;}
+.m-timebox .ml{font-size:12px;color:var(--ink3);}
+.m-timebox .mv{font-family:'Space Mono',monospace;font-size:17px;font-weight:700;}
+.m-btns{display:flex;gap:10px;}
+.m-confirm{flex:2;background:var(--green);color:white;border:none;border-radius:10px;padding:14px;font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;cursor:pointer;}
+.m-confirm:active{transform:scale(.97);}
+.m-cancel{flex:1;background:var(--bg2);color:var(--ink2);border:none;border-radius:10px;padding:14px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;cursor:pointer;}
+</style>
+</head>
+<body>
+<!-- Netlify Form — invisible, required for Netlify to detect the form -->
+<form name="safetrack-reportes" netlify hidden>
+  <input type="hidden" name="form-name" value="safetrack-reportes">
+  <input name="fecha"><input name="hora"><input name="nombre">
+  <input name="zona"><input name="supervisor"><input name="empaque">
+  <input name="modo"><input name="reporte"><input name="estado"><input name="notas">
+</form>
+<div class="app">
+
+<!-- ════ LOGIN PASO 1 — PERFIL ════ -->
+<div id="screen-login1" class="screen active">
+  <div class="topbar" style="justify-content:center;">
+    <div class="topbar-logo" style="font-size:13px;">USDA <span>·</span> AMS <span>·</span> SafeTrack</div>
+  </div>
+  <div class="scroll-body">
+    <div style="text-align:center;padding:16px 0 20px;">
+      <div style="font-size:30px;margin-bottom:6px;">🌿</div>
+      <div style="font-size:20px;font-weight:800;">Bienvenido</div>
+      <div style="font-size:11px;color:var(--ink3);margin-top:3px;font-family:'Space Mono',monospace;">PROGRAMA AGUACATE · USDA</div>
+    </div>
+    <div class="step-indicator">
+      <div class="si-dot active"></div>
+      <div class="si-dot"></div>
+      <span class="si-label">Paso 1 de 2 · Tu perfil</span>
+    </div>
+    <div class="field">
+      <label>Nombre completo</label>
+      <input type="text" id="in-name" placeholder="Ej: Carlos Mendoza" autocomplete="name">
+    </div>
+    <div class="field">
+      <label>Zona asignada</label>
+      <select id="in-zona">
+        <option value="">Selecciona tu zona...</option>
+        <option value="Zona 1">Zona 1 — Michoacán</option>
+        <option value="Zona 2">Zona 2 — Michoacán</option>
+        <option value="Zona 3">Zona 3 — Michoacán</option>
+        <option value="Zona 4">Zona 4 — Michoacán</option>
+        <option value="Zona 5">Zona 5 — Michoacán</option>
+        <option value="Zona 6">Zona 6 — Jalisco</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Supervisor asignado</label>
+      <select id="in-sup"><option value="">Selecciona tu supervisor...</option></select>
+    </div>
+    <button class="btn-primary" onclick="goStep2()">Continuar →</button>
+    <div style="text-align:center;margin-top:10px;">
+      <button class="link-btn" onclick="showPin()">Acceso supervisor</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ LOGIN PASO 2 — JORNADA ════ -->
+<div id="screen-login2" class="screen">
+  <div class="topbar" style="justify-content:center;">
+    <div class="topbar-logo" style="font-size:13px;">USDA <span>·</span> AMS <span>·</span> SafeTrack</div>
+  </div>
+  <div class="scroll-body">
+    <div style="padding:16px 0 20px;">
+      <div class="step-indicator">
+        <div class="si-dot"></div>
+        <div class="si-dot active"></div>
+        <span class="si-label">Paso 2 de 2 · Tu jornada de hoy</span>
+      </div>
+      <!-- Profile card -->
+      <div class="profile-card" id="profile-card">
+        <div class="pc-ava" id="pc-ava">—</div>
+        <div class="pc-info">
+          <div class="pc-name" id="pc-name">—</div>
+          <div class="pc-meta" id="pc-meta">—</div>
+        </div>
+        <button class="link-btn" onclick="showScreen('login1')" style="font-size:11px;">Cambiar</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Tipo de jornada</label>
+      <select id="in-mode" onchange="onModeChange()">
+        <option value="normal">Día normal — empaque</option>
+        <option value="ida">Viaje de ida (domingo)</option>
+        <option value="vuelta">Viaje de vuelta (domingo)</option>
+        <option value="sinact">Día sin actividad</option>
+        <option value="permiso">Día de permiso</option>
+      </select>
+    </div>
+    <div id="normal-fields">
+      <div class="field">
+        <label>Empaque principal</label>
+        <input type="text" id="in-empaque" placeholder="Nombre del empaque...">
+      </div>
+      <div class="field" id="empaque2-field">
+        <label>Segundo empaque <span style="font-weight:400;text-transform:none;color:var(--ink3)">(opcional)</span></label>
+        <input type="text" id="in-empaque2" placeholder="Solo si cubres dos empaques...">
+      </div>
+      <div class="toggle-row">
+        <span>Asignación foránea</span>
+        <button class="toggle" id="tog-foraneo" onclick="toggleForaneo(this)"></button>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="doLogin()">Ingresar →</button>
+  </div>
+</div>
+
+<!-- ════ DÍA SIN ACTIVIDAD — ELECCIÓN ════ -->
+<div id="screen-dayoff-choice" class="screen">
+  <div class="topbar"><div class="topbar-logo">USDA <span>·</span> SafeTrack</div></div>
+  <div class="scroll-body" style="display:flex;flex-direction:column;justify-content:center;">
+    <div style="text-align:center;margin-bottom:22px;">
+      <div style="font-size:30px;margin-bottom:8px;">📋</div>
+      <div style="font-size:18px;font-weight:800;">Día sin actividad</div>
+      <div style="font-size:13px;color:var(--ink3);margin-top:5px;">¿Te encuentras en asignación foránea?</div>
+    </div>
+    <div class="choice-grid">
+      <div class="choice-card" onclick="selectDayOff('local')">
+        <div class="cc-icon">🏠</div>
+        <div class="cc-title">No, soy local</div>
+        <div class="cc-sub">Sin reportes hoy</div>
+      </div>
+      <div class="choice-card" onclick="selectDayOff('foraneo')">
+        <div class="cc-icon">✈️</div>
+        <div class="cc-title">Sí, soy foráneo</div>
+        <div class="cc-sub">Conteo 8am y 8pm obligatorio</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ DÍA SIN ACTIVIDAD — LOCAL ════ -->
+<div id="screen-dayoff-local" class="screen">
+  <div class="topbar"><div class="topbar-logo">USDA <span>·</span> SafeTrack</div><div id="dol-clock" class="topbar-right">--:--</div></div>
+  <div class="day-header"><div><div class="dh-name" id="dol-name">—</div><div class="dh-meta" id="dol-meta">—</div></div><div class="tag tag-sinact">SIN ACTIVIDAD</div></div>
+  <div class="dayoff-screen">
+    <div class="do-icon">🏠</div>
+    <div class="do-title">Día sin actividad</div>
+    <div class="do-sub">No tienes reportes pendientes hoy. Que descanses.</div>
+    <button class="btn-primary" style="max-width:220px;margin-top:8px;" onclick="doLogout()">Salir</button>
+  </div>
+</div>
+
+<!-- ════ DÍA DE PERMISO ════ -->
+<div id="screen-permiso" class="screen">
+  <div class="topbar"><div class="topbar-logo">USDA <span>·</span> SafeTrack</div><div id="perm-clock" class="topbar-right">--:--</div></div>
+  <div class="day-header"><div><div class="dh-name" id="perm-name">—</div><div class="dh-meta" id="perm-meta">—</div></div><div class="tag tag-permiso">PERMISO</div></div>
+  <div class="dayoff-screen">
+    <div class="do-icon">📝</div>
+    <div class="do-title">Día de permiso</div>
+    <div class="do-sub">Tu permiso ha sido registrado. Tu supervisor está notificado de tu ausencia autorizada.</div>
+    <div style="background:var(--amber-bg);border-radius:10px;padding:13px 16px;font-size:12px;color:var(--amber);text-align:left;width:100%;max-width:300px;line-height:1.6;">
+      ✅ Sin reportes de seguridad requeridos hoy.
+    </div>
+    <button class="btn-primary" style="max-width:220px;margin-top:8px;" onclick="doLogout()">Salir</button>
+  </div>
+</div>
+
+<!-- ════ DÍA SIN ACTIVIDAD — FORÁNEO ════ -->
+<div id="screen-dayoff-foraneo" class="screen">
+  <div class="topbar"><div class="topbar-logo">USDA <span>·</span> SafeTrack</div><div id="dof-clock" class="topbar-right">--:--</div></div>
+  <div class="day-header"><div><div class="dh-name" id="dof-name">—</div><div class="dh-meta" id="dof-meta">—</div></div><div class="tag tag-foraneo">FORÁNEO</div></div>
+  <div class="scroll-body">
+    <div class="info-banner ib-blue"><span>✈️</span><span>Día sin actividad laboral. Solo conteos de seguridad obligatorios.</span></div>
+    <div id="dof-alarm" class="alarm-banner hidden">
+      <span class="ab-icon">🚨</span>
+      <div><div class="ab-text">¡Hora de reportar!</div><div class="ab-sub">Toca el botón para confirmar</div></div>
+    </div>
+    <div id="dof-8am-btn"></div>
+    <div id="dof-8pm-btn" style="margin-top:8px;"></div>
+    <div style="margin-top:16px;">
+      <button class="btn-action ba-secondary" onclick="doLogout()">
+        <div class="a-icon">↩</div>
+        <div class="a-text"><span class="a-main" style="font-size:15px;">Salir</span></div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ OFICIAL — HOME ════ -->
+<div id="screen-of-home" class="screen">
+  <div class="topbar"><div class="topbar-logo">USDA <span>·</span> SafeTrack</div><div id="of-clock" class="topbar-right">--:--</div></div>
+  <div class="day-header">
+    <div><div class="dh-name" id="of-name">—</div><div class="dh-meta" id="of-meta">—</div></div>
+    <div id="of-tag" class="tag hidden"></div>
+  </div>
+  <div class="scroll-body" id="of-scroll">
+    <div id="alarm-banner" class="alarm-banner hidden">
+      <span class="ab-icon">🚨</span>
+      <div><div class="ab-text" id="alarm-text">¡Hora de reportar!</div><div class="ab-sub">Toca el botón para confirmar</div></div>
+    </div>
+    <div id="info-banner" class="info-banner hidden"></div>
+    <div id="travel-track" class="hidden"></div>
+    <div id="normal-status">
+      <div class="status-card">
+        <div class="sc-top"><div class="sc-label">Estado actual</div><div class="live-dot"></div></div>
+        <div class="sc-step" id="of-step-name">—</div>
+        <div class="sc-sub" id="of-step-sub">—</div>
+        <div class="timer-row" id="of-timer-row" style="display:none;">
+          <div class="t-lbl">Tiempo para reportar</div>
+          <div class="t-val" id="of-timer">—</div>
+        </div>
+        <div id="next-info" class="next-info hidden">
+          <span class="ni-lbl">Próximo reporte a las</span>
+          <span class="ni-val" id="ni-val">—</span>
+        </div>
+      </div>
+    </div>
+    <button class="btn-action ba-green" id="btn-main" onclick="openModal('main')">
+      <div class="a-icon" id="btn-icon">✅</div>
+      <div class="a-text"><span class="a-main" id="btn-label">—</span><span class="a-sub" id="btn-sub">Toca para enviar reporte</span></div>
+      <span class="a-arr">›</span>
+    </button>
+    <div id="secondary-btns"></div>
+    <div id="track-section">
+      <div class="section-title">Reportes del día</div>
+      <div class="step-track" id="step-track"></div>
+    </div>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-btn active" id="of-nav-home" onclick="ofNav('home')"><span class="ni">🏠</span>Inicio</button>
+    <button class="nav-btn" id="of-nav-stats" onclick="ofNav('stats')"><span class="ni">📊</span>Semana</button>
+    <button class="nav-btn" onclick="doLogout()"><span class="ni">↩</span>Salir</button>
+  </nav>
+</div>
+
+<!-- ════ OFICIAL STATS ════ -->
+<div id="screen-of-stats" class="screen">
+  <div class="topbar"><div class="topbar-logo">USDA <span>·</span> SafeTrack</div><div id="ofs-clock" class="topbar-right">--:--</div></div>
+  <div class="day-header"><div><div class="dh-name" id="ofs-title">—</div><div class="dh-meta" id="ofs-week">—</div></div></div>
+  <div class="scroll-body">
+    <div class="stat-cards" id="ofs-cards"></div>
+    <div class="section-title">Detalle por día</div>
+    <div class="week-table" id="ofs-table"></div>
+    <button class="btn-export be-green" onclick="exportOfCSV()">⬇️ Descargar mi reporte semanal</button>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-btn" onclick="ofNav('home')"><span class="ni">🏠</span>Inicio</button>
+    <button class="nav-btn active"><span class="ni">📊</span>Semana</button>
+    <button class="nav-btn" onclick="doLogout()"><span class="ni">↩</span>Salir</button>
+  </nav>
+</div>
+
+<!-- ════ SUPERVISOR PANEL ════ -->
+<div id="screen-sup-panel" class="screen">
+  <div class="topbar"><div class="topbar-logo">USDA <span>·</span> SafeTrack</div><div id="sup-clock" class="topbar-right">--:--</div></div>
+  <div class="day-header"><div><div class="dh-name" id="sup-name">—</div><div class="dh-meta" id="sup-meta">—</div></div></div>
+  <div class="scroll-body">
+    <div class="rollcall">
+      <div class="rc-icon">🕗</div>
+      <div><div class="rc-title">Conteo 8:00 AM</div><div class="rc-sub">Reportes críticos matutinos</div></div>
+      <div class="rc-count" id="rc-8am">—</div>
+    </div>
+    <div class="ctr-grid">
+      <div class="ctr"><span class="ctr-v cv-g" id="c-ok">0</span><div class="ctr-l">Al día</div></div>
+      <div class="ctr"><span class="ctr-v cv-a" id="c-late">0</span><div class="ctr-l">Tardío</div></div>
+      <div class="ctr"><span class="ctr-v cv-r" id="c-miss">0</span><div class="ctr-l">Sin rep.</div></div>
+      <div class="ctr"><span class="ctr-v cv-p" id="c-perm">0</span><div class="ctr-l">Permiso</div></div>
+    </div>
+    <div class="section-title">Personal asignado hoy</div>
+    <div class="emp-list" id="emp-list"></div>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-btn active" id="sup-nav-panel" onclick="supNav('panel')"><span class="ni">📊</span>Panel</button>
+    <button class="nav-btn" id="sup-nav-stats" onclick="supNav('stats')"><span class="ni">📅</span>Semana</button>
+    <button class="nav-btn" id="sup-nav-cfg" onclick="supNav('cfg')"><span class="ni">⚙️</span>Config</button>
+    <button class="nav-btn" onclick="doLogout()"><span class="ni">↩</span>Salir</button>
+  </nav>
+</div>
+
+<!-- ════ SUPERVISOR STATS ════ -->
+<div id="screen-sup-stats" class="screen">
+  <div class="topbar"><div class="topbar-logo">USDA <span>·</span> SafeTrack</div><div class="topbar-right" id="sups-clock">--:--</div></div>
+  <div class="day-header"><div><div class="dh-name" id="sups-title">—</div><div class="dh-meta" id="sups-week">—</div></div></div>
+  <div class="scroll-body">
+    <div class="stat-cards" id="sups-cards"></div>
+    <div class="section-title">Solo oficiales con retardos o ausencias</div>
+    <div class="week-table" id="sups-table"></div>
+    <button class="btn-export be-green" onclick="exportConsolidated()">⬇️ Reporte consolidado (6 supervisores)</button>
+    <button class="btn-export be-dark" onclick="exportMySup()">⬇️ Solo mi equipo</button>
+    <button class="btn-export be-blue" onclick="exportSemestral()">📊 Acumular en reporte semestral</button>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-btn" onclick="supNav('panel')"><span class="ni">📊</span>Panel</button>
+    <button class="nav-btn active"><span class="ni">📅</span>Semana</button>
+    <button class="nav-btn" onclick="supNav('cfg')"><span class="ni">⚙️</span>Config</button>
+    <button class="nav-btn" onclick="doLogout()"><span class="ni">↩</span>Salir</button>
+  </nav>
+</div>
+
+<!-- ════ SUPERVISOR CONFIG ════ -->
+<div id="screen-sup-cfg" class="screen">
+  <div class="topbar"><div class="topbar-logo">USDA <span>·</span> SafeTrack</div></div>
+  <div class="day-header"><div><div class="dh-name">Configuración</div><div class="dh-meta">Nombres de supervisores</div></div></div>
+  <div class="scroll-body">
+    <div class="section-title">Supervisores</div>
+    <div id="sup-edit-list"></div>
+    <button class="btn-primary" onclick="saveSups()">Guardar nombres</button>
+    <div style="margin-top:14px;padding:13px;background:var(--amber-bg);border-radius:10px;font-size:12px;color:var(--amber);line-height:1.6;">
+      <strong>PINs de supervisores:</strong> Solo el administrador conoce los PINs.<br>
+      Para cambiar nombres o PINs modifica el objeto <code>SUPERVISOR_PINS</code> en el archivo.
+    </div>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-btn" onclick="supNav('panel')"><span class="ni">📊</span>Panel</button>
+    <button class="nav-btn" onclick="supNav('stats')"><span class="ni">📅</span>Semana</button>
+    <button class="nav-btn active"><span class="ni">⚙️</span>Config</button>
+    <button class="nav-btn" onclick="doLogout()"><span class="ni">↩</span>Salir</button>
+  </nav>
+</div>
+
+<!-- PIN -->
+<div class="pin-overlay hidden" id="pin-overlay">
+  <div class="pin-sheet">
+    <div class="pin-handle"></div>
+    <div class="pin-title">Acceso Supervisor</div>
+    <div class="pin-sub">Ingresa el PIN de 4 dígitos</div>
+    <div class="pin-dots" id="pin-dots">
+      <div class="pin-dot" id="pd0"></div><div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div><div class="pin-dot" id="pd3"></div>
+    </div>
+    <div class="pin-pad">
+      <button class="pin-key" onclick="pk('1')">1</button><button class="pin-key" onclick="pk('2')">2</button><button class="pin-key" onclick="pk('3')">3</button>
+      <button class="pin-key" onclick="pk('4')">4</button><button class="pin-key" onclick="pk('5')">5</button><button class="pin-key" onclick="pk('6')">6</button>
+      <button class="pin-key" onclick="pk('7')">7</button><button class="pin-key" onclick="pk('8')">8</button><button class="pin-key" onclick="pk('9')">9</button>
+      <button class="pin-key" onclick="pk('0')" style="grid-column:2">0</button>
+      <button class="pin-key del" onclick="pdel()">⌫</button>
+    </div>
+    <div class="pin-err" id="pin-err"></div>
+    <button class="pin-cancel-btn" onclick="closePin()">Cancelar</button>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay hidden" id="modal">
+  <div class="modal-sheet">
+    <div class="m-handle"></div>
+    <div class="m-icon" id="m-icon">✅</div>
+    <div class="m-title" id="m-title">—</div>
+    <div class="m-sub" id="m-sub">—</div>
+    <div class="m-timebox"><div class="ml">Hora de envío</div><div class="mv" id="m-time">—</div></div>
+    <div id="m-notes-section" style="display:none;margin-bottom:14px;">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--ink3);margin-bottom:6px;">Resumen del día</div>
+      <textarea id="m-notes" rows="3" placeholder="Ej: 3 embarques completos, 1 mixto. Hora de entrada 08:30am..." style="width:100%;background:white;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-family:'Outfit',sans-serif;font-size:14px;color:var(--ink);outline:none;resize:none;line-height:1.5;transition:border-color .2s;" onfocus="this.style.borderColor='var(--green)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+      <div style="font-size:11px;color:var(--ink3);margin-top:4px;">Este resumen será visible para tu supervisor.</div>
+    </div>
+    <div class="m-btns">
+      <button class="m-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="m-confirm" onclick="confirmReport()">Confirmar ✓</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbx8YDWhc3U9tyM1MENbIv_Qo_nO4RkSj178oreShUZ8vQQxht3SHKWoZZEpsxcDo1MX/exec';
+
+// Supervisor PINs — cada PIN está ligado a un supervisor
+const SUPERVISOR_PINS = {
+  '4817': { name:'Tapia Miguel A.',  zona:'' },
+  '2953': { name:'Roberto Eder',     zona:'' },
+  '7364': { name:'Romero Aarón',     zona:'' },
+  '5129': { name:'Olalde Guillermo', zona:'' },
+  '3748': { name:'Morales Elías',    zona:'' },
+  '6291': { name:'Monroy Teresa',    zona:'' },
+};
+const ADMIN_PIN = '9056'; // Elías — ve las 6 zonas
+const DEFAULT_SUPS = ['Tapia Miguel A.','Roberto Eder','Romero Aarón','Olalde Guillermo','Morales Elías','Monroy Teresa'];
+const REPORT_HOURS = [8,10,12,14,16,18];
+
+// Steps
+const STEPS_PRE = [
+  {id:'salida_casa', label:'Saliendo de casa',      sub:'Inicio del día',        icon:'🏠'},
+  {id:'iniciando',   label:'Iniciando actividades', sub:'Llegada al empaque',    icon:'🏭'},
+];
+const STEP_FIN   = {id:'finalizando',   label:'Finalizando actividades', sub:'Cierre de jornada · siempre disponible', icon:'✅'};
+const STEP_LLEGA = {id:'llegando_casa', label:'Llegando a casa/hotel',   sub:'Confirma tu llegada · siempre disponible', icon:'🏡'};
+const STEP_8AM   = {id:'conteo_8am',   label:'Conteo 8:00 AM',          sub:'⚠️ Reporte crítico de seguridad', icon:'🕗', critical:true};
+const STEP_8PM   = {id:'conteo_8pm',   label:'Conteo 8:00 PM',          sub:'⚠️ Solo personal foráneo', icon:'🌙', critical:true};
+const STEPS_IDA  = [
+  {id:'salida_casa',    label:'Saliendo de casa',   sub:'Inicio del viaje',            icon:'🏠'},
+  {id:'llegando_hotel', label:'Llegando al hotel',  sub:'Confirma tu llegada al hotel', icon:'🏨'},
+];
+const STEPS_VUELTA = [
+  {id:'salida_hotel',  label:'Saliendo del hotel', sub:'Inicio del regreso',  icon:'🏨'},
+  {id:'conteo_8am',    label:'Conteo 8:00 AM',     sub:'⚠️ Reporte crítico', icon:'🕗', critical:true},
+  {id:'llegando_casa', label:'Llegando a casa',     sub:'Confirma tu llegada', icon:'🏠'},
+];
+
+const DAYS = ['Lun','Mar','Mié','Jue','Vie','Sáb'];
+const AVA_COLORS = ['#2D6A4F','#1B4F72','#6B4226','#7B2D8B','#B5571A','#1A5276'];
+
+const DEMO_STAFF = [
+  {name:'Carlos Mendoza', zona:'Zona 1', emp:'Mich. Norte',  emp2:'', foraneo:false, sup:'García',  status:'ok',   done:['salida_casa','iniciando','reporte_10'], last:'10:03', week:[{ok:8,l:0,m:0,p:0},{ok:8,l:1,m:0,p:0},{ok:8,l:0,m:0,p:0},{ok:7,l:0,m:0,p:1},{ok:8,l:0,m:0,p:0},{ok:6,l:0,m:0,p:0}]},
+  {name:'Ana Ríos',       zona:'Zona 6', emp:'Jal. Centro',  emp2:'', foraneo:true,  sup:'García',  status:'ok',   done:['salida_casa','iniciando','conteo_8am','reporte_10','reporte_12'], last:'12:01', week:[{ok:8,l:0,m:0,p:0},{ok:8,l:0,m:0,p:0},{ok:8,l:0,m:0,p:0},{ok:8,l:0,m:0,p:0},{ok:8,l:0,m:0,p:0},{ok:8,l:0,m:0,p:0}]},
+  {name:'Jorge Paredes',  zona:'Zona 2', emp:'Nay. Costa',   emp2:'', foraneo:false, sup:'Torres',  status:'late', done:['salida_casa','iniciando'], last:'09:45', week:[{ok:7,l:1,m:0,p:0},{ok:6,l:1,m:1,p:0},{ok:8,l:0,m:0,p:0},{ok:7,l:1,m:0,p:0},{ok:8,l:0,m:0,p:0},{ok:7,l:0,m:0,p:1}]},
+  {name:'Sofía Luna',     zona:'Zona 3', emp:'Col. Sur',     emp2:'Col. Este', foraneo:false, sup:'Torres', status:'ok', done:['salida_casa','iniciando','reporte_10'], last:'10:07', week:[{ok:8,l:0,m:0,p:0},{ok:8,l:0,m:0,p:0},{ok:7,l:1,m:0,p:0},{ok:8,l:0,m:0,p:0},{ok:8,l:0,m:0,p:0},{ok:8,l:0,m:0,p:0}]},
+  {name:'Miguel Torres',  zona:'Zona 6', emp:'Jal. Norte',   emp2:'', foraneo:true,  sup:'Ramírez', status:'miss', done:['salida_casa'], last:'08:12', week:[{ok:5,l:2,m:1,p:0},{ok:6,l:1,m:1,p:0},{ok:7,l:0,m:1,p:0},{ok:8,l:0,m:0,p:0},{ok:6,l:2,m:0,p:0},{ok:7,l:1,m:0,p:0}]},
+  {name:'Paola Vega',     zona:'Zona 4', emp:'Gro. Este',    emp2:'', foraneo:false, sup:'Ramírez', status:'ok',   done:['salida_casa','iniciando','reporte_10'], last:'10:11', week:[{ok:8,l:0,m:0,p:0},{ok:8,l:0,m:0,p:0},{ok:8,l:0,m:0,p:0},{ok:8,l:0,m:0,p:0},{ok:7,l:1,m:0,p:0},{ok:8,l:0,m:0,p:0}]},
+  {name:'Rubén Castro',   zona:'Zona 1', emp:'Jal. Centro',  emp2:'', foraneo:false, sup:'Vega',    status:'ok',   done:['salida_casa','iniciando','reporte_10','reporte_12'], last:'12:05', week:[{ok:8,l:0,m:0,p:0},{ok:8,l:0,m:0,p:0},{ok:8,l:0,m:0,p:0},{ok:8,l:0,m:0,p:0},{ok:8,l:0,m:0,p:0},{ok:8,l:0,m:0,p:0}]},
+  {name:'Diana Fuentes',  zona:'Zona 5', emp:'Nay. Costa',   emp2:'', foraneo:true,  sup:'Vega',    status:'permiso', done:[], last:'—', week:[{ok:7,l:1,m:0,p:0},{ok:8,l:0,m:0,p:0},{ok:6,l:1,m:0,p:1},{ok:8,l:0,m:0,p:0},{ok:7,l:1,m:0,p:0},{ok:8,l:0,m:0,p:0}]},
+  {name:'Ernesto Mora',   zona:'Zona 2', emp:'Col. Sur',     emp2:'', foraneo:false, sup:'Morales', status:'ok',   done:['salida_casa','iniciando','reporte_10'], last:'10:09', week:[{ok:8,l:0,m:0,p:0},{ok:8,l:0,m:0,p:0},{ok:8,l:0,m:0,p:0},{ok:8,l:0,m:0,p:0},{ok:8,l:0,m:0,p:0},{ok:7,l:1,m:0,p:0}]},
+  {name:'Claudia Reyes',  zona:'Zona 3', emp:'Gro. Este',    emp2:'', foraneo:true,  sup:'Morales', status:'miss', done:['salida_casa'], last:'07:58', week:[{ok:6,l:0,m:2,p:0},{ok:7,l:1,m:0,p:0},{ok:5,l:1,m:2,p:0},{ok:8,l:0,m:0,p:0},{ok:7,l:0,m:1,p:0},{ok:8,l:0,m:0,p:0}]},
+  {name:'Iván Medina',    zona:'Zona 4', emp:'Mich. Norte',  emp2:'Mich. Sur', foraneo:false, sup:'Ríos', status:'ok', done:['salida_casa','iniciando','reporte_10','reporte_12'], last:'12:00', week:[{ok:8,l:0,m:0,p:0},{ok:8,l:0,m:0,p:0},{ok:8,l:0,m:0,p:0},{ok:8,l:0,m:0,p:0},{ok:8,l:0,m:0,p:0},{ok:8,l:0,m:0,p:0}]},
+  {name:'Fernanda Gil',   zona:'Zona 5', emp:'Jal. Centro',  emp2:'', foraneo:false, sup:'Ríos',    status:'ok',   done:['salida_casa','iniciando','reporte_10'], last:'10:14', week:[{ok:8,l:0,m:0,p:0},{ok:7,l:1,m:0,p:0},{ok:8,l:0,m:0,p:0},{ok:8,l:0,m:0,p:0},{ok:8,l:0,m:0,p:0},{ok:8,l:0,m:0,p:0}]},
+];
+
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+let st={name:'',supervisor:'',zona:'',empaque:'',empaque2:'',foraneo:false,
+  mode:'normal',role:'oficial',completed:{},stepIdx:0,smartSteps:[],
+  timerInt:null,finDone:false,llegDone:false,
+  conteo8amDone:false,conteo8pmDone:false,jornDone:false};
+let pinBuf='',isForaneoOn=false,currentModalStep=null;
+let dof8amDone=false,dof8pmDone=false;
+let supervisors=[...DEFAULT_SUPS];
+
+// ══════════════════════════════════════════
+// GOOGLE SHEETS CONNECTION
+// ══════════════════════════════════════════
+function sendToSheet(data){
+  try{
+    const f=document.createElement('form');
+    f.method='POST';
+    f.action='/';
+    f.style.display='none';
+    // Add redirect back to app after submit
+    // Auto redirect back to app after submit
+    const redirectInput=document.createElement('input');
+    redirectInput.type='hidden';
+    redirectInput.name='_redirect';
+    redirectInput.value=window.location.origin+window.location.pathname;
+    f.appendChild(redirectInput);
+    const fields={'form-name':'safetrack-reportes','fecha':data.fecha,'hora':data.hora,
+      'nombre':data.nombre,'zona':data.zona,'supervisor':data.supervisor,
+      'empaque':data.empaque,'modo':data.modo,'reporte':data.reporte,
+      'estado':data.estado||'ok','notas':data.notas||''};
+    Object.entries(fields).forEach(([k,v])=>{
+      const i=document.createElement('input');
+      i.type='hidden';i.name=k;i.value=v||'';f.appendChild(i);
+    });
+    document.body.appendChild(f);
+    f.submit();
+    console.log('✅ Reporte enviado:',data.reporte,data.nombre);
+  }catch(e){console.log('Form error:',e);}
+}
+
+async function loadFromSheet(supervisor){
+  try{
+    const fecha=todayKey();
+    // If supervisor is empty string, admin loads all data
+    let url=SHEET_URL+'?fecha='+fecha;
+    if(supervisor) url+='&supervisor='+encodeURIComponent(supervisor);
+    const res=await fetch(url);
+    const data=await res.json();
+    return data.rows||[];
+  }catch(e){
+    console.log('Sheet load error:',e);
+    return[];
+  }
+}
+
+// ══════════════════════════════════════════
+// PERSISTENCE
+// ══════════════════════════════════════════
+function todayKey(){const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());}
+function saveSession(){
+  if(!st.name||st.role!=='oficial') return;
+  localStorage.setItem('st_session',JSON.stringify({
+    ...st,dof8amDone,dof8pmDone,date:todayKey()
+  }));
+}
+function loadSession(){
+  const raw=localStorage.getItem('st_session');
+  if(!raw) return null;
+  const d=JSON.parse(raw);
+  return d.date===todayKey()?d:null;
+}
+function applySession(d){
+  Object.assign(st,d);
+  dof8amDone=d.dof8amDone||false;
+  dof8pmDone=d.dof8pmDone||false;
+}
+
+// ══════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════
+function nowStr(){const n=new Date();return pad(n.getHours())+':'+pad(n.getMinutes());}
+function pad(n){return String(n).padStart(2,'0');}
+function initials(n){return n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();}
+function weekRange(){const d=new Date(),day=d.getDay();const mon=new Date(d);mon.setDate(d.getDate()-(day===0?6:day-1));const sat=new Date(mon);sat.setDate(mon.getDate()+5);return mon.getDate()+'/'+(mon.getMonth()+1)+' — '+sat.getDate()+'/'+(sat.getMonth()+1);}
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('screen-'+id).classList.add('active');}
+function startClock(id){const u=()=>{const n=new Date();try{document.getElementById(id).textContent=pad(n.getHours())+':'+pad(n.getMinutes())+':'+pad(n.getSeconds());}catch(e){}};u();setInterval(u,1000);}
+function toggleForaneo(el){isForaneoOn=!isForaneoOn;el.classList.toggle('on',isForaneoOn);}
+function doLogout(){if(st.timerInt)clearInterval(st.timerInt);localStorage.removeItem('st_session');location.reload();}
+function onModeChange(){
+  const m=document.getElementById('in-mode').value;
+  document.getElementById('normal-fields').style.display=(m==='normal')?'block':'none';
+}
+function secsUntilHour(h){const now=new Date(),t=new Date();t.setHours(h,0,0,0);if(t<=now)t.setDate(t.getDate()+1);return Math.max(0,Math.floor((t-now)/1000));}
+function formatHour(h){if(h<12)return h+':00 AM';if(h===12)return '12:00 PM';return(h-12)+':00 PM';}
+
+function buildSmartSteps(){
+  const now=new Date(),h=now.getHours(),m=now.getMinutes();
+  return REPORT_HOURS.filter(rh=>rh>h||(rh===h&&m===0)).map(rh=>({
+    id:'reporte_'+pad(rh),label:'Reporte '+formatHour(rh),
+    sub:'Cada 2 hrs · estoy bien',icon:'📍',targetHour:rh
+  }));
+}
+
+// ══════════════════════════════════════════
+// PIN
+// ══════════════════════════════════════════
+function showPin(){pinBuf='';updateDots();document.getElementById('pin-err').textContent='';document.getElementById('pin-overlay').classList.remove('hidden');}
+function closePin(){document.getElementById('pin-overlay').classList.add('hidden');}
+function pk(k){if(pinBuf.length>=4)return;pinBuf+=k;updateDots();if(pinBuf.length===4)checkPin();}
+function pdel(){pinBuf=pinBuf.slice(0,-1);updateDots();}
+function updateDots(){for(let i=0;i<4;i++)document.getElementById('pd'+i).classList.toggle('filled',i<pinBuf.length);}
+function checkPin(){
+  // Check admin PIN first
+  if(pinBuf===ADMIN_PIN){
+    closePin();
+    const name=document.getElementById('in-name').value.trim()||'Morales Elías';
+    st.name=name;st.supervisor='Admin';st.role='admin';st.zona='Todas';
+    buildAdminPanel();showScreen('sup-panel');startClock('sup-clock');
+    return;
+  }
+  // Check supervisor PINs
+  const supData=SUPERVISOR_PINS[pinBuf];
+  if(supData){
+    closePin();
+    st.name=supData.name;
+    st.supervisor=supData.name;
+    st.zona=supData.zona;
+    st.role='supervisor';
+    buildSupPanel();showScreen('sup-panel');startClock('sup-clock');
+  } else {
+    document.getElementById('pin-err').textContent='PIN incorrecto.';
+    pinBuf='';updateDots();
+  }
+}
+
+// ══════════════════════════════════════════
+// LOGIN — STEP 1
+// ══════════════════════════════════════════
+function goStep2(){
+  const name=document.getElementById('in-name').value.trim();
+  const zona=document.getElementById('in-zona').value;
+  const sup=document.getElementById('in-sup').value;
+  if(!name||!zona||!sup){alert('Por favor completa todos los campos.');return;}
+  st.name=name;st.zona=zona;st.supervisor='Sup. '+sup;
+  // Save profile
+  localStorage.setItem('st_profile',JSON.stringify({name,zona,supervisor:sup}));
+  // Fill step 2 profile card
+  document.getElementById('pc-ava').textContent=initials(name);
+  document.getElementById('pc-name').textContent=name;
+  document.getElementById('pc-meta').textContent=zona+' · Sup. '+sup;
+  showScreen('login2');
+}
+
+// ══════════════════════════════════════════
+// LOGIN — STEP 2
+// ══════════════════════════════════════════
+function doLogin(){
+  const mode=document.getElementById('in-mode').value;
+  st.mode=mode;st.role='oficial';
+  st.empaque=document.getElementById('in-empaque').value.trim();
+  st.empaque2=document.getElementById('in-empaque2').value.trim();
+  st.foraneo=isForaneoOn;
+  st.completed={};st.stepIdx=0;st.smartSteps=[];
+  st.finDone=false;st.llegDone=false;st.conteo8amDone=false;st.conteo8pmDone=false;st.jornDone=false;
+
+  if(mode==='normal'&&!st.empaque){alert('Por favor escribe el nombre del empaque.');return;}
+
+  if(mode==='sinact'){saveSession();showScreen('dayoff-choice');return;}
+  if(mode==='permiso'){
+    saveSession();
+    document.getElementById('perm-name').textContent=st.name;
+    document.getElementById('perm-meta').textContent=st.supervisor+' · '+st.zona+' · Permiso autorizado';
+    startClock('perm-clock');
+    showScreen('permiso');return;
+  }
+
+  launchOficial();
+}
+
+function launchOficial(){
+  const mode=st.mode;
+  // Header
+  document.getElementById('of-name').textContent=st.name;
+  const metaParts=[st.supervisor,st.zona,st.empaque];
+  if(st.empaque2) metaParts.push(st.empaque2);
+  document.getElementById('of-meta').textContent=metaParts.join(' · ');
+  const tag=document.getElementById('of-tag');
+  if(mode==='ida'){tag.className='tag tag-viaje-ida';tag.textContent='VIAJE IDA';tag.classList.remove('hidden');}
+  else if(mode==='vuelta'){tag.className='tag tag-viaje-vuelta';tag.textContent='VIAJE VUELTA';tag.classList.remove('hidden');}
+  else if(st.foraneo){tag.className='tag tag-foraneo';tag.textContent='FORÁNEO';tag.classList.remove('hidden');}
+
+  if(mode==='normal'){
+    document.getElementById('travel-track').classList.add('hidden');
+    document.getElementById('normal-status').classList.remove('hidden');
+    document.getElementById('track-section').classList.remove('hidden');
+    renderNormalStep();
+  } else {
+    document.getElementById('normal-status').classList.add('hidden');
+    document.getElementById('track-section').classList.add('hidden');
+    document.getElementById('of-timer-row').style.display='none';
+    renderTravelMode();
+  }
+  showScreen('of-home');startClock('of-clock');requestNotifPermission();
+  saveSession();
+}
+
+// ══════════════════════════════════════════
+// DAY OFF
+// ══════════════════════════════════════════
+function selectDayOff(type){
+  st.foraneo=(type==='foraneo');
+  saveSession();
+  if(type==='local'){
+    document.getElementById('dol-name').textContent=st.name;
+    document.getElementById('dol-meta').textContent=st.supervisor+' · '+st.zona+' · Sin actividad';
+    startClock('dol-clock');showScreen('dayoff-local');
+  } else {
+    document.getElementById('dof-name').textContent=st.name;
+    document.getElementById('dof-meta').textContent=st.supervisor+' · '+st.zona+' · Foráneo';
+    startClock('dof-clock');dof8amDone=false;dof8pmDone=false;
+    renderDayOffForaneo();showScreen('dayoff-foraneo');
+    requestNotifPermission();scheduleDayOffAlarms();
+  }
+}
+
+function renderDayOffForaneo(){
+  const now=new Date(),h=now.getHours();
+  const p8=h>=8,p8pm=h>=20;
+  let h8=!dof8amDone
+    ?`<button class="btn-action ${p8?'ba-urgent':'ba-secondary'}" onclick="confirmDayOff('8am')"><div class="a-icon">🕗</div><div class="a-text"><span class="a-main">Conteo 8:00 AM</span><span class="a-sub">⚠️ Reporte crítico de seguridad</span></div><span class="a-arr">›</span></button>`
+    :`<button class="btn-action ba-done ba-disabled"><div class="a-icon">🕗</div><div class="a-text"><span class="a-main">Conteo 8:00 AM</span><span class="a-sub">✓ Enviado</span></div></button>`;
+  let h8pm='';
+  if(!dof8pmDone){
+    if(p8pm){h8pm=`<button class="btn-action ba-urgent" onclick="confirmDayOff('8pm')"><div class="a-icon">🌙</div><div class="a-text"><span class="a-main">Conteo 8:00 PM</span><span class="a-sub">⚠️ Reporte crítico de seguridad</span></div><span class="a-arr">›</span></button>`;}
+    else{const diff=secsUntilHour(20),hh=Math.floor(diff/3600),mm=Math.floor((diff%3600)/60);h8pm=`<div style="background:var(--bg2);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:12px;"><span style="font-size:20px;">🌙</span><div><div style="font-size:13px;font-weight:600;">Conteo 8:00 PM</div><div style="font-size:11px;color:var(--ink3);">Disponible en ${hh>0?hh+'h '+pad(mm)+'m':pad(mm)+' min'}</div></div></div>`;}
+  } else {h8pm=`<button class="btn-action ba-done ba-disabled"><div class="a-icon">🌙</div><div class="a-text"><span class="a-main">Conteo 8:00 PM</span><span class="a-sub">✓ Enviado</span></div></button>`;}
+  document.getElementById('dof-8am-btn').innerHTML=h8;
+  document.getElementById('dof-8pm-btn').innerHTML=h8pm;
+}
+
+function confirmDayOff(w){
+  if(w==='8am')dof8amDone=true; else dof8pmDone=true;
+  document.getElementById('dof-alarm').classList.add('hidden');
+  if('vibrate'in navigator)navigator.vibrate(80);
+  saveSession();renderDayOffForaneo();
+}
+
+function scheduleDayOffAlarms(){
+  setInterval(()=>{
+    const now=new Date(),h=now.getHours(),m=now.getMinutes();
+    if(h===8&&m===0&&!dof8amDone)fireAlarm('Conteo 8:00 AM','dof-alarm');
+    if(h===20&&m===0&&!dof8pmDone)fireAlarm('Conteo 8:00 PM','dof-alarm');
+    renderDayOffForaneo();
+  },30000);
+}
+
+// ══════════════════════════════════════════
+// NORMAL MODE
+// ══════════════════════════════════════════
+function getAllSteps(){return st.smartSteps.length?[...STEPS_PRE,...st.smartSteps]:STEPS_PRE;}
+
+function renderNormalStep(){
+  const steps=getAllSteps(),idx=st.stepIdx,step=steps[idx];
+  renderSecondary();
+  if(!step){
+    document.getElementById('of-step-name').textContent='Reportes de jornada completados';
+    document.getElementById('of-step-sub').textContent='Usa los botones de abajo cuando corresponda';
+    document.getElementById('of-timer-row').style.display='none';
+    document.getElementById('next-info').classList.add('hidden');
+    document.getElementById('btn-main').className='btn-action ba-green ba-disabled';
+    renderTrack(steps);return;
+  }
+  document.getElementById('of-step-name').textContent=step.label;
+  document.getElementById('of-step-sub').textContent=step.sub;
+  document.getElementById('btn-icon').textContent=step.icon;
+  document.getElementById('btn-label').textContent=step.label;
+  document.getElementById('btn-sub').textContent=step.critical?'⚠️ Reporte crítico':'Toca para enviar reporte';
+  document.getElementById('btn-main').className='btn-action '+(step.critical?'ba-urgent':'ba-green');
+  if(step.targetHour!==undefined){
+    document.getElementById('of-timer-row').style.display='flex';
+    document.getElementById('next-info').classList.remove('hidden');
+    document.getElementById('ni-val').textContent=pad(step.targetHour)+':00';
+    startTimer(secsUntilHour(step.targetHour),step.label,step.targetHour);
+  } else {
+    document.getElementById('of-timer-row').style.display='none';
+    document.getElementById('next-info').classList.add('hidden');
+    clearTimer();
+  }
+  renderTrack(steps);
+}
+
+function renderSecondary(){
+  const inicDone=!!st.completed['iniciando'],salidaDone=!!st.completed['salida_casa'];
+  const now=new Date(),p8pm=now.getHours()>=20;
+  // 8AM only for foraneos
+  let html='';
+  if(st.foraneo){
+    if(!st.conteo8amDone){
+      html+=`<button class="btn-action ba-urgent" onclick="openModal('conteo_8am')" style="margin-bottom:10px;"><div class="a-icon">🕗</div><div class="a-text"><span class="a-main">Conteo 8:00 AM</span><span class="a-sub">⚠️ Reporte crítico · solo foráneos</span></div><span class="a-arr">›</span></button>`;
+    } else {
+      html+=`<button class="btn-action ba-done ba-disabled" style="margin-bottom:10px;"><div class="a-icon">🕗</div><div class="a-text"><span class="a-main">Conteo 8:00 AM</span><span class="a-sub">✓ Enviado a las ${st.completed['conteo_8am']?.time||'—'}</span></div></button>`;
+    }
+  }
+  if(inicDone&&!st.finDone){
+    html+=`<button class="btn-action ba-secondary" onclick="openModal('finalizando')"><div class="a-icon">✅</div><div class="a-text"><span class="a-main">Finalizando actividades</span><span class="a-sub">Disponible en cualquier momento</span></div><span class="a-arr">›</span></button>`;
+  } else if(st.finDone){
+    html+=`<button class="btn-action ba-done ba-disabled"><div class="a-icon">✅</div><div class="a-text"><span class="a-main">Finalizando actividades</span><span class="a-sub">✓ Enviado a las ${st.completed['finalizando']?.time||'—'}</span></div></button>`;
+  }
+  if(salidaDone&&!st.llegDone){
+    html+=`<button class="btn-action ba-secondary" onclick="openModal('llegando_casa')" style="margin-top:4px;"><div class="a-icon">🏡</div><div class="a-text"><span class="a-main">Llegando a casa/hotel</span><span class="a-sub">Disponible en cualquier momento</span></div><span class="a-arr">›</span></button>`;
+  } else if(st.llegDone){
+    html+=`<button class="btn-action ba-done ba-disabled" style="margin-top:4px;"><div class="a-icon">🏡</div><div class="a-text"><span class="a-main">Llegando a casa/hotel</span><span class="a-sub">✓ Enviado a las ${st.completed['llegando_casa']?.time||'—'}</span></div></button>`;
+  }
+  if(st.foraneo){
+    if(!st.conteo8pmDone){
+      html+=p8pm
+        ?`<button class="btn-action ba-urgent" onclick="openModal('conteo_8pm')" style="margin-top:4px;"><div class="a-icon">🌙</div><div class="a-text"><span class="a-main">Conteo 8:00 PM</span><span class="a-sub">⚠️ Reporte crítico de seguridad</span></div><span class="a-arr">›</span></button>`
+        :`<div style="background:var(--bg2);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:12px;margin-top:4px;"><span style="font-size:20px;">🌙</span><div><div style="font-size:13px;font-weight:600;">Conteo 8:00 PM</div><div style="font-size:11px;color:var(--ink3);">Disponible en ${(()=>{const d=secsUntilHour(20),hh=Math.floor(d/3600),mm=Math.floor((d%3600)/60);return hh>0?hh+'h '+pad(mm)+'m':pad(mm)+' min';})()}</div></div></div>`;
+    } else {
+      html+=`<button class="btn-action ba-done ba-disabled" style="margin-top:4px;"><div class="a-icon">🌙</div><div class="a-text"><span class="a-main">Conteo 8:00 PM</span><span class="a-sub">✓ Enviado a las ${st.completed['conteo_8pm']?.time||'—'}</span></div></button>`;
+    }
+  }
+  document.getElementById('secondary-btns').innerHTML=html;
+}
+
+// ══════════════════════════════════════════
+// TRAVEL MODE
+// ══════════════════════════════════════════
+function renderTravelMode(){
+  const steps=st.mode==='ida'?STEPS_IDA:STEPS_VUELTA;
+  const step=steps[st.stepIdx];
+  document.getElementById('travel-track').classList.remove('hidden');
+  if(!step){
+    document.getElementById('btn-main').className='btn-action ba-done ba-disabled';
+    document.getElementById('btn-icon').textContent='✅';
+    document.getElementById('btn-label').textContent='¡Viaje completado!';
+    document.getElementById('btn-sub').textContent='Todos los reportes enviados';
+  } else {
+    document.getElementById('btn-icon').textContent=step.icon;
+    document.getElementById('btn-label').textContent=step.label;
+    document.getElementById('btn-sub').textContent=step.critical?'⚠️ Reporte crítico':'Toca para enviar reporte';
+    document.getElementById('btn-main').className='btn-action '+(step.critical?'ba-urgent':'ba-green');
+  }
+  const pills=steps.map((s,i)=>{
+    const done=st.completed[s.id],curr=i===st.stepIdx&&!!step;
+    return`<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:white;border-radius:10px;border:1.5px solid var(--border);margin-bottom:8px;">
+      <span style="font-size:18px;">${s.icon}</span>
+      <div style="flex:1;"><div style="font-size:13px;font-weight:600;">${s.label}</div>
+      <div style="font-size:10px;color:var(--ink3);font-family:'Space Mono',monospace;">${done?done.time:'—'}</div></div>
+      <span style="font-size:9px;font-weight:600;padding:3px 7px;border-radius:5px;background:${done?'var(--green-bg)':curr?'var(--ink)':'var(--bg3)'};color:${done?'var(--green)':curr?'white':'var(--ink3)'};">${done?'Enviado':curr?'Pendiente':'Esperando'}</span>
+    </div>`;
+  }).join('');
+  document.getElementById('travel-track').innerHTML=`<div class="section-title">Reportes del viaje</div>${pills}`;
+  document.getElementById('secondary-btns').innerHTML='';
+}
+
+// ══════════════════════════════════════════
+// TIMER
+// ══════════════════════════════════════════
+const TOLERANCE_SECS = 1200; // 20 min tolerance before marking late
+function clearTimer(){if(st.timerInt){clearInterval(st.timerInt);st.timerInt=null;}}
+function secsOverdue(targetHour){
+  // How many seconds PAST the target hour (negative = still before)
+  const now=new Date(),t=new Date();
+  t.setHours(targetHour,0,0,0);
+  return Math.floor((now-t)/1000);
+}
+function startTimer(totalSecs,label,targetHour){
+  clearTimer();let fired=false;
+  const el=document.getElementById('of-timer');
+  const update=()=>{
+    if(st.jornDone){clearTimer();el.textContent='Detenido';el.className='t-val';return;}
+    const rem=secsUntilHour(targetHour);
+    const over=secsOverdue(targetHour); // positive = past the hour
+    if(rem>0){
+      // Counting down to report hour
+      const h=Math.floor(rem/3600),m=Math.floor((rem%3600)/60),s=rem%60;
+      el.textContent=h>0?h+':'+pad(m):pad(m)+':'+pad(s);
+      el.className='t-val'+(rem<600?' warn':'');
+    } else if(over<=TOLERANCE_SECS){
+      // Within 20 min tolerance — show overdue in amber
+      const m=Math.floor(over/60),s=over%60;
+      el.textContent='+'+pad(m)+':'+pad(s);
+      el.className='t-val warn';
+    } else {
+      // Past 20 min — mark as late
+      el.textContent='Retardo';
+      el.className='t-val urg';
+    }
+    if(rem===0&&!fired){fired=true;fireAlarm(label,'alarm-banner');}
+  };
+  update();st.timerInt=setInterval(update,1000);
+}
+
+// ══════════════════════════════════════════
+// ALARM
+// ══════════════════════════════════════════
+function requestNotifPermission(){if('Notification'in window&&Notification.permission==='default')Notification.requestPermission();}
+function fireAlarm(label,bannerId){
+  if('vibrate'in navigator)navigator.vibrate([400,100,400,100,400]);
+  if('Notification'in window&&Notification.permission==='granted')
+    new Notification('🚨 SafeTrack — Reportar ahora',{body:label,tag:'st'});
+  try{const ctx=new(window.AudioContext||window.webkitAudioContext)();[0,.45,.9].forEach(t=>{const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=880;g.gain.setValueAtTime(.3,ctx.currentTime+t);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+t+.35);o.start(ctx.currentTime+t);o.stop(ctx.currentTime+t+.35);});}catch(e){}
+  try{document.getElementById(bannerId).classList.remove('hidden');}catch(e){}
+}
+
+// ══════════════════════════════════════════
+// MODAL
+// ══════════════════════════════════════════
+function openModal(which){
+  let step=null;
+  if(which==='main'){
+    step=st.mode==='normal'?getAllSteps()[st.stepIdx]:(st.mode==='ida'?STEPS_IDA:STEPS_VUELTA)[st.stepIdx];
+  } else if(which==='finalizando') step=STEP_FIN;
+  else if(which==='llegando_casa') step=STEP_LLEGA;
+  else if(which==='conteo_8am') step=STEP_8AM;
+  else if(which==='conteo_8pm') step=STEP_8PM;
+  if(!step) return;
+  currentModalStep={...step,which};
+  try{document.getElementById('alarm-banner').classList.add('hidden');}catch(e){}
+  document.getElementById('m-icon').textContent=step.icon;
+  document.getElementById('m-title').textContent=step.label;
+  document.getElementById('m-sub').textContent=step.critical?'⚠️ Reporte crítico de seguridad. Tu supervisor será notificado de inmediato.':'Tu supervisor recibirá confirmación de que te encuentras bien.';
+  document.getElementById('m-time').textContent=nowStr();
+  // Show notes field only for finalizando
+  const notesSection=document.getElementById('m-notes-section');
+  const notesInput=document.getElementById('m-notes');
+  if(step.id==='finalizando'){
+    notesSection.style.display='block';
+    notesInput.value='';
+  } else {
+    notesSection.style.display='none';
+  }
+  document.getElementById('modal').classList.remove('hidden');
+}
+function closeModal(){document.getElementById('modal').classList.add('hidden');currentModalStep=null;}
+function confirmReport(){
+  const s=currentModalStep;
+  if(!s) return;
+  // Save step label BEFORE closeModal clears currentModalStep
+  const stepLabel = s.label;
+  const stepId = s.id;
+  const stepTargetHour = s.targetHour;
+  const stepCritical = s.critical;
+  closeModal();
+  st.completed[stepId]={time:nowStr()};
+  if('vibrate'in navigator)navigator.vibrate(80);
+  if(stepId==='finalizando'){
+    st.finDone=true;st.jornDone=true;clearTimer();
+    // Save daily notes
+    const notes=document.getElementById('m-notes')?.value?.trim()||'';
+    if(notes){
+      const notesKey='daily_notes_'+todayKey()+'_'+st.name.replace(/ /g,'_');
+      localStorage.setItem(notesKey,notes);
+      st.completed['finalizando'].notes=notes;
+    }
+    document.getElementById('info-banner').className='info-banner ib-green';
+    document.getElementById('info-banner').innerHTML='<span>✅</span><span>Jornada finalizada. Timer detenido.</span>';
+    document.getElementById('info-banner').classList.remove('hidden');
+    renderNormalStep();
+  } else if(stepId==='llegando_casa'){st.llegDone=true;renderNormalStep();}
+  else if(stepId==='conteo_8am'){st.conteo8amDone=true;renderNormalStep();}
+  else if(stepId==='conteo_8pm'){st.conteo8pmDone=true;renderNormalStep();}
+  else {
+    if(stepId==='iniciando') st.smartSteps=buildSmartSteps();
+    st.stepIdx++;
+    if(st.mode==='normal') renderNormalStep(); else renderTravelMode();
+  }
+  saveSession();
+  // Sync to Google Sheets
+  sendToSheet({
+    fecha:todayKey(),
+    hora:nowStr(),
+    nombre:st.name,
+    zona:st.zona,
+    supervisor:st.supervisor,
+    empaque:st.empaque+(st.empaque2?' + '+st.empaque2:''),
+    modo:st.mode,
+    reporte:stepLabel,
+    estado:(stepTargetHour===undefined?'ok':secsOverdue(stepTargetHour)>TOLERANCE_SECS?'retardo':'ok'),
+    notas:st.completed['finalizando']?.notes||''
+  });
+  try{document.getElementById('of-scroll').scrollTo({top:0,behavior:'smooth'});}catch(e){}
+}
+
+// ══════════════════════════════════════════
+// TRACK
+// ══════════════════════════════════════════
+function renderTrack(steps){
+  document.getElementById('step-track').innerHTML=steps.map((s,i)=>{
+    const done=st.completed[s.id];
+    let cls,ic,badge,bt;
+    if(done){cls='done';ic='dk';badge='b-done';bt='Enviado';}
+    else if(i===st.stepIdx){cls='current';ic='cu';badge='b-curr';bt='Pendiente';}
+    else{cls='pending';ic='pe';badge='b-pend';bt='Esperando';}
+    return`<div class="step-item ${cls}"><div class="s-icon ${ic}">${s.icon}</div><div class="s-text"><div class="s-name">${s.label}</div><div class="s-time">${done?done.time:'—'}</div></div><span class="s-badge ${badge}">${bt}</span></div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════
+function ofNav(tab){
+  if(tab==='home'){showScreen('of-home');document.getElementById('of-nav-home').classList.add('active');document.getElementById('of-nav-stats').classList.remove('active');}
+  else{buildOfStats();showScreen('of-stats');document.getElementById('of-nav-stats').classList.add('active');document.getElementById('of-nav-home').classList.remove('active');}
+}
+function supNav(tab){
+  ['panel','stats','cfg'].forEach(t=>document.getElementById('sup-nav-'+t)?.classList.remove('active'));
+  document.getElementById('sup-nav-'+tab)?.classList.add('active');
+  if(tab==='panel'){buildSupPanel();showScreen('sup-panel');}
+  else if(tab==='stats'){buildSupStats();showScreen('sup-stats');}
+  else{buildCfg();showScreen('sup-cfg');}
+}
+
+// ══════════════════════════════════════════
+// STATS
+// ══════════════════════════════════════════
+function buildOfStats(){
+  startClock('ofs-clock');
+  document.getElementById('ofs-title').textContent=st.name+' · Mi semana';
+  document.getElementById('ofs-week').textContent=weekRange();
+  const emp=DEMO_STAFF.find(e=>e.name===st.name)||DEMO_STAFF[0];
+  const tO=emp.week.reduce((a,d)=>a+d.ok,0),tL=emp.week.reduce((a,d)=>a+d.l,0),tM=emp.week.reduce((a,d)=>a+d.m,0);
+  const pct=tO+tL+tM>0?Math.round(tO/(tO+tL+tM)*100):0;
+  document.getElementById('ofs-cards').innerHTML=`
+    <div class="stat-card"><div class="sv sv-g">${pct}%</div><div class="sl">Cumplimiento</div></div>
+    <div class="stat-card"><div class="sv sv-g">${tO}</div><div class="sl">A tiempo</div></div>
+    <div class="stat-card"><div class="sv sv-a">${tL}</div><div class="sl">Tardíos</div></div>
+    <div class="stat-card"><div class="sv sv-r">${tM}</div><div class="sl">Omitidos</div></div>`;
+  renderWeekTable('ofs-table',[emp],true);
+}
+
+function renderSupWithRealData(rows){
+  // Group by employee name — get latest status per employee
+  const byName={};
+  rows.forEach(r=>{
+    if(!byName[r['Nombre']]) byName[r['Nombre']]={
+      name:r['Nombre'],zona:r['Zona'],emp:r['Empaque'],emp2:r['Empaque2']||'',
+      foraneo:r['Foráneo']==='Sí',sup:r['Supervisor'],
+      done:[],last:'—',status:'ok',notas:''
+    };
+    byName[r['Nombre']].done.push(r['Reporte']);
+    byName[r['Nombre']].last=r['Hora'];
+    if(r['Estado']==='retardo') byName[r['Nombre']].status='late';
+    if(r['Notas']) byName[r['Nombre']].notas=r['Notas'];
+  });
+  const staff=Object.values(byName);
+  if(!staff.length) return;
+
+  // Update counters
+  document.getElementById('c-ok').textContent=staff.filter(e=>e.status==='ok').length;
+  document.getElementById('c-late').textContent=staff.filter(e=>e.status==='late').length;
+  document.getElementById('c-miss').textContent=0;
+  document.getElementById('c-perm').textContent=0;
+  const amOk=staff.filter(e=>e.done.some(d=>d.includes('8:00 AM'))).length;
+  const forCnt=staff.filter(e=>e.foraneo).length;
+  const rc=document.getElementById('rc-8am');
+  rc.textContent=amOk+'/'+(forCnt||staff.length);
+  rc.className='rc-count '+(amOk>=(forCnt||staff.length)?'rc-g':'rc-r');
+
+  // Render employee cards
+  const AVA=['#2D6A4F','#1B4F72','#6B4226','#7B2D8B','#B5571A','#1A5276'];
+  document.getElementById('emp-list').innerHTML=staff.map((e,i)=>{
+    const col=AVA[i%AVA.length];
+    const sLbl=e.status==='late'?'Tardío':'Al día';
+    const sCls=e.status==='late'?'es-late':'es-ok';
+    const pills=e.done.map(d=>`<span class="pill p-done">✓ ${d.replace('Reporte ','').replace('Saliendo de casa','🏠').replace('Iniciando actividades','🏭').replace('Conteo','⚠️').replace('Finalizando actividades','✅').replace('Llegando a casa/hotel','🏡')}</span>`).join('');
+    const notasHtml=e.notas?`<div style="margin-top:8px;padding:8px 10px;background:var(--blue-bg);border-radius:8px;font-size:12px;color:var(--blue);line-height:1.5;"><span style="font-weight:700;">📋 Resumen: </span>${e.notas}</div>`:'';
+    const obsKey='obs_'+todayKey()+'_'+e.name.replace(/ /g,'_');
+    const savedObs=localStorage.getItem(obsKey)||'';
+    const empId='real_'+i;
+    return`<div class="emp-card">
+      <div class="ec-top"><div class="ec-ava" style="background:${col}22;color:${col}">${initials(e.name)}</div>
+      <div class="ec-info"><div class="ec-name">${e.name}${e.foraneo?' ✈️':''}</div>
+      <div class="ec-meta">${e.zona} · ${e.emp}${e.emp2?' + '+e.emp2:''} · Último: ${e.last}</div></div>
+      <span class="ec-status ${sCls}">${sLbl}</span></div>
+      <div class="ec-pills">${pills||'<span style="font-size:11px;color:var(--ink3);">Sin reportes aún</span>'}</div>
+      ${notasHtml}
+      <div class="obs-area">
+        <div class="obs-label">Observaciones del día</div>
+        <textarea class="obs-input" id="obs_${empId}" rows="2" placeholder="Escribe una observación si es necesario..." onchange="saveObs('${obsKey}','obs_${empId}','${e.name}','${e.zona}')">${savedObs}</textarea>
+        <div class="obs-saved" id="obs_saved_${empId}">${savedObs?'✓ Guardado':''}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function saveObs(key,inputId,oficialName,zona){
+  const val=document.getElementById(inputId)?.value||'';
+  localStorage.setItem(key,val);
+  const savedEl=document.getElementById('obs_saved_'+inputId.replace('obs_',''));
+  if(savedEl) savedEl.textContent=val?'✓ Guardado':'';
+  if(val){
+    sendToSheet({
+      action:'observacion',
+      fecha:todayKey(),
+      supervisor:st.supervisor,
+      oficial:oficialName,
+      zona:zona,
+      texto:val
+    });
+  }
+}
+
+function buildAdminPanel(){
+  startClock('sup-clock');
+  document.getElementById('sup-name').textContent='Admin — Morales Elías · Todas las zonas';
+  document.getElementById('sup-meta').textContent='Cargando datos consolidados...';
+  // Load all data (no supervisor filter)
+  loadFromSheet('').then(rows=>{
+    if(rows.length>0) renderSupWithRealData(rows);
+    // Update counters with all zones
+    document.getElementById('sup-meta').textContent=
+      new Date().toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long'})+' · Admin · Sincronizado ✓';
+  }).catch(()=>{
+    document.getElementById('sup-meta').textContent='Sin conexión';
+    // Show demo with all staff
+    renderDemoStaff(DEMO_STAFF);
+  });
+}
+
+function renderDemoStaff(staff){
+  document.getElementById('c-ok').textContent=staff.filter(e=>e.status==='ok').length;
+  document.getElementById('c-late').textContent=staff.filter(e=>e.status==='late').length;
+  document.getElementById('c-miss').textContent=staff.filter(e=>e.status==='miss').length;
+  document.getElementById('c-perm').textContent=staff.filter(e=>e.status==='permiso').length;
+  const amOk=staff.filter(e=>e.done.includes('conteo_8am')).length;
+  const forCnt=staff.filter(e=>e.foraneo).length;
+  const rc=document.getElementById('rc-8am');
+  rc.textContent=amOk+'/'+forCnt+' foráneos';
+  rc.className='rc-count '+(amOk===forCnt?'rc-g':'rc-r');
+}
+
+function buildSupPanel(){
+  startClock('sup-clock');
+  document.getElementById('sup-name').textContent='Sup. '+st.supervisor+' — Panel diario';
+  // Show sync status
+  document.getElementById('sup-meta').textContent='Cargando datos en tiempo real...';
+  loadFromSheet(st.supervisor).then(rows=>{
+    if(rows.length>0) renderSupWithRealData(rows);
+    document.getElementById('sup-meta').textContent=new Date().toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long'})+' · Sincronizado ✓';
+  }).catch(()=>{
+    document.getElementById('sup-meta').textContent=new Date().toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long'})+' · Sin conexión';
+  });
+  document.getElementById('sup-meta').textContent=new Date().toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long'});
+  const myStaff=DEMO_STAFF.filter(e=>e.sup===st.supervisor);
+  const staff=myStaff.length?myStaff:DEMO_STAFF.slice(0,4);
+  document.getElementById('c-ok').textContent=staff.filter(e=>e.status==='ok').length;
+  document.getElementById('c-late').textContent=staff.filter(e=>e.status==='late').length;
+  document.getElementById('c-miss').textContent=staff.filter(e=>e.status==='miss').length;
+  document.getElementById('c-perm').textContent=staff.filter(e=>e.status==='permiso').length;
+  const amOk=staff.filter(e=>e.done.includes('conteo_8am')).length;
+  const foraneoTotal=staff.filter(e=>e.foraneo).length;
+  const rc=document.getElementById('rc-8am');
+  rc.textContent=amOk+'/'+foraneoTotal+'  foráneos';
+  rc.className='rc-count '+(amOk===foraneoTotal?'rc-g':'rc-r');
+  document.getElementById('emp-list').innerHTML=staff.map((e,i)=>{
+    const col=AVA_COLORS[i%AVA_COLORS.length];
+    const sLbl=e.status==='ok'?'Al día':e.status==='late'?'Tardío':e.status==='permiso'?'Permiso':'Sin reporte';
+    const sCls=e.status==='permiso'?'es-permiso':'es-'+e.status;
+    const allSteps=[...STEPS_PRE,STEP_8AM,STEP_FIN,STEP_LLEGA,...(e.foraneo?[STEP_8PM]:[])];
+    const pills=allSteps.slice(0,7).map(s=>`<span class="pill ${e.done.includes(s.id)?'p-done':'p-pend'}">${s.icon}</span>`).join('');
+    const empLabel=e.emp2?e.emp+' + '+e.emp2:e.emp;
+    const obsKey='obs_'+todayKey()+'_'+e.name.replace(/ /g,'_');
+    const savedObs=localStorage.getItem(obsKey)||'';
+    const empId='emp_'+i;
+    return`<div class="emp-card">
+      <div class="ec-top">
+        <div class="ec-ava" style="background:${col}22;color:${col}">${initials(e.name)}</div>
+        <div class="ec-info"><div class="ec-name">${e.name}${e.foraneo?' ✈️':''}</div>
+        <div class="ec-meta">${e.zona} · ${empLabel} · Último: ${e.last}</div></div>
+        <span class="ec-status ${sCls}">${sLbl}</span>
+      </div>
+      <div class="ec-pills">${pills}</div>
+      ${(()=>{
+        const nk='daily_notes_'+todayKey()+'_'+e.name.replace(/ /g,'_');
+        const n=localStorage.getItem(nk);
+        return n?`<div style="margin-top:8px;padding:8px 10px;background:var(--blue-bg);border-radius:8px;font-size:12px;color:var(--blue);line-height:1.5;"><span style="font-weight:700;">📋 Resumen: </span>${n}</div>`:'';
+      })()}
+      <div class="obs-area">
+        <div class="obs-label">Observaciones del día</div>
+        <textarea class="obs-input" id="obs_${empId}" rows="2" placeholder="Escribe una observación si es necesario..." onchange="saveObs('${obsKey}','obs_${empId}')">${savedObs}</textarea>
+        <div class="obs-saved" id="obs_saved_${empId}">${savedObs?'✓ Guardado':''}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function buildSupStats(){
+  startClock('sups-clock');
+  document.getElementById('sups-title').textContent='Semana · Sup. '+st.supervisor;
+  document.getElementById('sups-week').textContent=weekRange();
+  const myStaff=DEMO_STAFF.filter(e=>e.sup===st.supervisor);
+  const staff=myStaff.length?myStaff:DEMO_STAFF.slice(0,4);
+  const issues=staff.filter(e=>e.week.some(d=>d.l>0||d.m>0||d.p>0));
+  const tO=staff.reduce((a,e)=>a+e.week.reduce((b,d)=>b+d.ok,0),0);
+  const tL=staff.reduce((a,e)=>a+e.week.reduce((b,d)=>b+d.l,0),0);
+  const tM=staff.reduce((a,e)=>a+e.week.reduce((b,d)=>b+d.m,0),0);
+  const pct=tO+tL+tM>0?Math.round(tO/(tO+tL+tM)*100):0;
+  document.getElementById('sups-cards').innerHTML=`
+    <div class="stat-card"><div class="sv sv-g">${pct}%</div><div class="sl">Cumplimiento</div></div>
+    <div class="stat-card"><div class="sv sv-g">${tO}</div><div class="sl">A tiempo</div></div>
+    <div class="stat-card"><div class="sv sv-a">${tL}</div><div class="sl">Tardíos</div></div>
+    <div class="stat-card"><div class="sv sv-r">${tM}</div><div class="sl">Omitidos</div></div>`;
+  if(!issues.length){document.getElementById('sups-table').innerHTML='<div style="padding:20px;text-align:center;font-size:13px;color:var(--ink3);">✅ Sin retardos ni ausencias esta semana</div>';}
+  else renderWeekTable('sups-table',issues,false);
+}
+
+function renderWeekTable(id,staff,single){
+  const cols=single?'grid-template-columns:repeat(6,1fr)':'grid-template-columns:100px repeat(6,1fr)';
+  const hn=single?'':'<div class="wt-cell" style="text-align:left">Oficial</div>';
+  const hd=DAYS.map(d=>`<div class="wt-cell">${d}</div>`).join('');
+  const rows=staff.map(e=>{
+    const cells=e.week.map(d=>{
+      if(d.p>0)return`<div class="wt-data"><div class="day-dot dd-perm">P</div></div>`;
+      if(d.m>0)return`<div class="wt-data"><div class="day-dot dd-miss">${d.m}</div></div>`;
+      if(d.l>0)return`<div class="wt-data"><div class="day-dot dd-late">!</div></div>`;
+      return`<div class="wt-data"><div class="day-dot dd-ok">✓</div></div>`;
+    }).join('');
+    const nc=single?'':`<div class="wt-name">${e.name.split(' ')[0]}</div>`;
+    return`<div class="wt-row" style="${cols}">${nc}${cells}</div>`;
+  }).join('');
+  document.getElementById(id).innerHTML=`<div class="wt-head" style="${cols}">${hn}${hd}</div>${rows}`;
+}
+
+// ══════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════
+function buildCfg(){
+  document.getElementById('sup-edit-list').innerHTML=supervisors.map((s,i)=>`
+    <div class="sup-edit-item"><div class="sup-edit-num">#${i+1}</div>
+    <input type="text" id="si${i}" value="${s}" placeholder="Nombre"></div>`).join('');
+}
+function saveSups(){
+  supervisors=supervisors.map((_,i)=>document.getElementById('si'+i).value.trim()||supervisors[i]);
+  localStorage.setItem('st_sups',JSON.stringify(supervisors));
+  const sel=document.getElementById('in-sup');
+  sel.innerHTML='<option value="">Selecciona tu supervisor...</option>';
+  supervisors.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent='Sup. '+s;sel.appendChild(o);});
+  alert('✅ Nombres guardados.');
+}
+
+// ══════════════════════════════════════════
+// EXPORTS
+// ══════════════════════════════════════════
+function csvRows(staff){
+  const h='Oficial,Zona,Supervisor,Empaque,Empaque 2,Foráneo,'+DAYS.map(d=>d+' OK,'+d+' Tard,'+d+' Omit,'+d+' Perm').join(',')+',Total OK,Tard,Omit,Perm,Cumpl%,Observaciones semana\n';
+  return h+staff.map(e=>{
+    const cols=e.week.map(d=>`${d.ok},${d.l},${d.m},${d.p}`).join(',');
+    const tO=e.week.reduce((a,d)=>a+d.ok,0),tL=e.week.reduce((a,d)=>a+d.l,0),
+          tM=e.week.reduce((a,d)=>a+d.m,0),tP=e.week.reduce((a,d)=>a+d.p,0);
+    // Collect all observations for this employee this week
+    const obsAll=[0,1,2,3,4,5].map(i=>{
+      const d=new Date();d.setDate(d.getDate()-(d.getDay()===0?6:d.getDay()-1)+i);
+      const k='obs_'+d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'_'+e.name.replace(/ /g,'_');
+      return localStorage.getItem(k)||'';
+    }).filter(Boolean).join(' | ');
+    return`${e.name},${e.zona},Sup. ${e.sup},${e.emp},${e.emp2||''},${e.foraneo?'Sí':'No'},${cols},${tO},${tL},${tM},${tP},${Math.round(tO/(tO+tL+tM)*100)||0}%,"${obsAll}"`;
+  }).join('\n');
+}
+function dlCSV(c,fn){const b=new Blob(['\uFEFF'+c],{type:'text/csv;charset=utf-8;'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=fn;a.click();}
+function exportOfCSV(){const e=DEMO_STAFF.find(x=>x.name===st.name)||DEMO_STAFF[0];dlCSV(csvRows([e]),`reporte_${st.name.replace(/ /g,'_')}.csv`);}
+function exportMySup(){const s=DEMO_STAFF.filter(e=>e.sup===st.supervisor);dlCSV(csvRows(s.length?s:DEMO_STAFF.slice(0,4)),`reporte_sup_${st.supervisor}.csv`);}
+function exportConsolidated(){dlCSV(csvRows(DEMO_STAFF),`reporte_consolidado_USDA_${weekRange().replace(/[^0-9]/g,'')}.csv`);}
+function exportSemestral(){
+  const issues=DEMO_STAFF.filter(e=>e.week.some(d=>d.l>0||d.m>0||d.p>0));
+  const wks=Array.from({length:6},(_,i)=>{const d=new Date();d.setDate(d.getDate()-i*7);const day=d.getDay();const m=new Date(d);m.setDate(d.getDate()-(day===0?6:day-1));return m.getDate()+'/'+(m.getMonth()+1);}).reverse();
+  let csv='REPORTE SEMESTRAL USDA — Solo retardos, ausencias y permisos\nGenerado: '+new Date().toLocaleDateString('es-MX')+'\n\n=== RESUMEN ===\n';
+  csv+='Oficial,Zona,Supervisor,'+wks.map(w=>'Sem '+w+' Tard,Sem '+w+' Omit,Sem '+w+' Perm').join(',')+',TOTAL Tard,TOTAL Omit,TOTAL Perm,Cumpl%\n';
+  issues.forEach(e=>{
+    const sim=Array.from({length:6},(_,i)=>{const b=e.week[Math.min(i,e.week.length-1)];return{l:b.l,m:b.m,p:b.p};});
+    const tL=sim.reduce((a,d)=>a+d.l,0),tM=sim.reduce((a,d)=>a+d.m,0),tP=sim.reduce((a,d)=>a+d.p,0),tO=e.week.reduce((a,d)=>a+d.ok,0)*6;
+    csv+=`${e.name},${e.zona},Sup. ${e.sup},${sim.map(d=>d.l+','+d.m+','+d.p).join(',')},${tL},${tM},${tP},${Math.round(tO/(tO+tL+tM)*100)||0}%\n`;
+  });
+  csv+='\n=== DETALLE SEMANAL ===\n';
+  wks.forEach(wk=>{
+    csv+=`\n--- Semana ${wk} ---\nOficial,Zona,Supervisor,${DAYS.map(d=>d+' OK,'+d+' Tard,'+d+' Omit,'+d+' Perm').join(',')}\n`;
+    issues.forEach(e=>{csv+=`${e.name},${e.zona},Sup. ${e.sup},${e.week.map(d=>d.ok+','+d.l+','+d.m+','+d.p).join(',')}\n`;});
+  });
+  dlCSV(csv,`reporte_semestral_USDA_${new Date().getFullYear()}.csv`);
+  alert('✅ Descargado. Ábrelo en Excel y guárdalo como .xlsx.');
+}
+
+// ══════════════════════════════════════════
+// INIT — restore session or pre-fill profile
+// ══════════════════════════════════════════
+(function(){
+  const saved=localStorage.getItem('st_sups');
+  if(saved) supervisors=JSON.parse(saved);
+  const sel=document.getElementById('in-sup');
+  supervisors.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent='Sup. '+s;sel.appendChild(o);});
+
+  // Try restore today's session
+  const session=loadSession();
+  if(session){
+    applySession(session);
+    const mode=st.mode;
+    if(mode==='permiso'){
+      document.getElementById('perm-name').textContent=st.name;
+      document.getElementById('perm-meta').textContent=st.supervisor+' · '+st.zona+' · Permiso autorizado';
+      startClock('perm-clock');showScreen('permiso');return;
+    }
+    if(mode==='sinact'){
+      if(st.foraneo){
+        document.getElementById('dof-name').textContent=st.name;
+        document.getElementById('dof-meta').textContent=st.supervisor+' · '+st.zona+' · Foráneo';
+        startClock('dof-clock');renderDayOffForaneo();showScreen('dayoff-foraneo');
+        requestNotifPermission();scheduleDayOffAlarms();
+      } else {
+        document.getElementById('dol-name').textContent=st.name;
+        document.getElementById('dol-meta').textContent=st.supervisor+' · '+st.zona+' · Sin actividad';
+        startClock('dol-clock');showScreen('dayoff-local');
+      }
+      return;
+    }
+    launchOficial();return;
+  }
+
+  // Pre-fill profile step 1
+  const profile=localStorage.getItem('st_profile');
+  if(profile){
+    const p=JSON.parse(profile);
+    document.getElementById('in-name').value=p.name||'';
+    if(p.zona) document.getElementById('in-zona').value=p.zona;
+    if(p.supervisor) document.getElementById('in-sup').value=p.supervisor;
+  }
+})();
+</script>
+</body>
+</html>
